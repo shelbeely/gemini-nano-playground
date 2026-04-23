@@ -19,8 +19,8 @@ class VolumeTool @Inject constructor(
 ) : DeviceTool {
 
     override val name = "volume"
-    override val description = "Set device volume. Streams: ring, media, alarm. Level: 0-15."
-    override val paramsSchema = """{"stream":"ring|media|alarm","level":"0-15"}"""
+    override val description = "Set device volume. Streams: ring, media, alarm. Level: 0 to device maximum (usually 15)."
+    override val paramsSchema = """{"stream":"ring|media|alarm","level":"0 to device max"}"""
 
     private val audioManager by lazy {
         context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
@@ -33,7 +33,7 @@ class VolumeTool @Inject constructor(
             else    -> AudioManager.STREAM_MUSIC
         }
         val level = params["level"]?.trim()?.toIntOrNull()
-            ?: return "Missing or invalid 'level' parameter (expected 0-15)."
+            ?: return "Missing or invalid 'level' parameter (expected 0 to device max)."
         val maxVolume = audioManager.getStreamMaxVolume(stream)
         val clamped = level.coerceIn(0, maxVolume)
         return try {

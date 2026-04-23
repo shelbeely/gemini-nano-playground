@@ -42,7 +42,7 @@ class AlarmTool @Inject constructor(
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             }
             context.startActivity(intent)
-            "Alarm set for %02d:%02d — "%s".".format(hour, minute, title)
+            "Alarm set for %02d:%02d — '%s'.".format(hour, minute, title)
         } catch (e: Exception) {
             "Failed to set alarm: ${e.message}"
         }

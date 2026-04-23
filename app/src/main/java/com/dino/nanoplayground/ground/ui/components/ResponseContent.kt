@@ -7,9 +7,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
+import androidx.compose.material3.AssistChip
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
-import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.snapshots.SnapshotStateList
@@ -42,10 +42,11 @@ fun ResponseContent(
         )
 
         AnimatedVisibility(visible = activeToolCall != null) {
-            SuggestionChip(
+            AssistChip(
                 onClick = {},
+                enabled = false,
                 label = { Text(activeToolCall ?: "") },
-                icon = { Icon(Icons.Default.Build, contentDescription = null) },
+                leadingIcon = { Icon(Icons.Default.Build, contentDescription = null) },
             )
         }
 

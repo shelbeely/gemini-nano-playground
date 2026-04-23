@@ -34,9 +34,31 @@ class ToolOrchestrator @Inject constructor(
         // Lenient JSON parser — ignores unknown keys so partial model output is still parseable
         private val json = Json { ignoreUnknownKeys = true; isLenient = true }
 
-        // Matches the first {...} block that contains a "tool" key.
-        // Uses a simple greedy scan; robust enough for well-formed model output.
-        private val toolCallRegex = Regex("""\{\s*"tool"\s*:.*?\}""", RegexOption.DOT_MATCHES_ALL)
+        /**
+         * Finds the first balanced JSON object in [text] that contains a "tool" key.
+         * Uses brace counting to correctly handle nested objects in the params value.
+         */
+        private fun findFirstJsonObject(text: String): String? {
+            val start = text.indexOf("{")
+            if (start < 0) return null
+            var depth = 0
+            for (i in start until text.length) {
+                when (text[i]) {
+                    '{' -> depth++
+                    '}' -> {
+                        depth--
+                        if (depth == 0) {
+                            val candidate = text.substring(start, i + 1)
+                            if (candidate.contains("\"tool\"")) return candidate
+                            // Not a tool call — look for the next opening brace
+                            val next = text.indexOf("{", i + 1)
+                            return if (next >= 0) findFirstJsonObject(text.substring(next)) else null
+                        }
+                    }
+                }
+            }
+            return null
+        }
     }
 
     /**
@@ -107,12 +129,13 @@ class ToolOrchestrator @Inject constructor(
 
     /**
      * Attempts to find and parse the first `{"tool":"…","params":{…}}` JSON block within
-     * [text].  Returns a pair of (toolName, params) or null if no valid call is found.
+     * [text] using balanced-brace scanning so nested params objects are handled correctly.
+     * Returns a pair of (toolName, params) or null if no valid call is found.
      */
     private fun extractToolCall(text: String): Pair<String, Map<String, String>>? {
-        val match = toolCallRegex.find(text) ?: return null
+        val raw = findFirstJsonObject(text) ?: return null
         return try {
-            val jsonObj: JsonObject = json.parseToJsonElement(match.value).jsonObject
+            val jsonObj: JsonObject = json.parseToJsonElement(raw).jsonObject
             val toolName = jsonObj["tool"]?.jsonPrimitive?.content ?: return null
             val paramsObj = jsonObj["params"]?.jsonObject ?: JsonObject(emptyMap())
             val params = paramsObj.entries.associate { (k, v) ->
