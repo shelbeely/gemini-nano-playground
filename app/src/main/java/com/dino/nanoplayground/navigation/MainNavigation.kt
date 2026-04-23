@@ -7,6 +7,7 @@ import androidx.compose.ui.Modifier
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.ui.NavDisplay
 import com.dino.nanoplayground.ground.ui.NanoGroundScreen
+import com.dino.nanoplayground.settings.ui.SettingScreen
 
 data object Ground
 data object Settings
@@ -28,7 +29,9 @@ fun MainNavigation(modifier: Modifier = Modifier, intentPrompt: String) {
                     backStack.add(it)
                 }
             }
-            entry<Settings> {}
+            entry<Settings> {
+                SettingScreen()
+            }
             entry<Info> {}
             entry<Documentation> {}
         }
