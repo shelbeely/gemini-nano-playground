@@ -1,14 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <!-- Network: HTTP server -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
     <!-- BLE advertising and peripheral mode (API 31+, always required since minSdk=33) -->
     <uses-permission android:name="android.permission.BLUETOOTH_ADVERTISE" />
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
-    <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
 
     <!-- Foreground service permissions -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
 
     <!-- BLE hardware feature: declared but not required so the app installs on non-BLE devices -->
     <uses-feature android:name="android.hardware.bluetooth_le" android:required="false" />
@@ -43,6 +48,11 @@
         <service
             android:name=".ble.NanoBleService"
             android:foregroundServiceType="connectedDevice"
+            android:exported="false" />
+
+        <service
+            android:name=".server.NanoServerService"
+            android:foregroundServiceType="dataSync"
             android:exported="false" />
     </application>
 
