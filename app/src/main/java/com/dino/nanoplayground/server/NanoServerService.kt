@@ -9,6 +9,7 @@ import androidx.core.app.NotificationCompat
 import com.dino.nanoplayground.ble.NanoBleManager
 import com.dino.nanoplayground.server.routes.chatRoutes
 import com.dino.nanoplayground.server.routes.modelRoutes
+import com.dino.nanoplayground.tools.ToolOrchestrator
 import com.google.mlkit.genai.prompt.GenerativeModel
 import dagger.hilt.android.AndroidEntryPoint
 import io.ktor.serialization.kotlinx.json.json
@@ -39,6 +40,7 @@ class NanoServerService : Service() {
     @Inject lateinit var generativeModel: GenerativeModel
     @Inject lateinit var serverManager: NanoServerManager
     @Inject lateinit var bleManager: NanoBleManager
+    @Inject lateinit var toolOrchestrator: ToolOrchestrator
 
     private var engine: io.ktor.server.engine.EmbeddedServer<*, *>? = null
 
@@ -59,7 +61,7 @@ class NanoServerService : Service() {
 
             routing {
                 modelRoutes()
-                chatRoutes(generativeModel) { serverManager.bearerToken.value }
+                chatRoutes(toolOrchestrator) { serverManager.bearerToken.value }
             }
         }.also { it.start(wait = false) }
 

@@ -8,8 +8,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dino.nanoplayground.ground.models.FeatureAvailability
 import com.dino.nanoplayground.ground.models.HomeState
+import com.dino.nanoplayground.tools.ToolOrchestrator
 import com.google.mlkit.genai.common.FeatureStatus
-import com.google.mlkit.genai.prompt.GenerateContentResponse
 import com.google.mlkit.genai.prompt.GenerativeModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -22,12 +22,18 @@ import javax.inject.Inject
 
 @Stable
 @HiltViewModel
-class ChatViewModel @Inject constructor(private val generativeModel: GenerativeModel) :
-    ViewModel() {
+class ChatViewModel @Inject constructor(
+    private val generativeModel: GenerativeModel,
+    private val toolOrchestrator: ToolOrchestrator,
+) : ViewModel() {
 
     val response = mutableStateListOf<String>()
     var homeState = mutableStateOf<HomeState>(HomeState())
         private set
+
+    /** Non-null while the orchestrator is executing a device tool; shown as a UI chip. */
+    private val _activeToolCall = MutableStateFlow<String?>(null)
+    val activeToolCall = _activeToolCall.asStateFlow()
 
 
     init {
@@ -87,11 +93,15 @@ class ChatViewModel @Inject constructor(private val generativeModel: GenerativeM
 
     fun sendRequest(prompt: String) = viewModelScope.launch(Dispatchers.IO) {
         try {
-            val response = generativeModel.generateContent(prompt)
-            clearAndResetResponse(response)
+            val text = toolOrchestrator.runWithTools(prompt) { toolName ->
+                _activeToolCall.value = "🔧 Using tool: $toolName…"
+            }
+            _activeToolCall.value = null
+            clearAndResetResponse(text)
         } catch (e: Exception) {
             e.printStackTrace()
         } finally {
+            _activeToolCall.value = null
             setInferenceState(false)
             stopCountDown()
         }
@@ -128,11 +138,9 @@ class ChatViewModel @Inject constructor(private val generativeModel: GenerativeM
         homeState.value = homeState.value.copy(isInferencing = state)
     }
 
-    private fun clearAndResetResponse(request: GenerateContentResponse) = viewModelScope.launch {
+    private fun clearAndResetResponse(text: String) = viewModelScope.launch {
         response.clear()
-        request.candidates.forEach {
-            response.add(it.text)
-        }
+        response.add(text)
     }
 
     private fun setFeatureAvailability(availability: FeatureAvailability) = viewModelScope.launch {

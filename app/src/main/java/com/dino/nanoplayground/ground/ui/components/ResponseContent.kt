@@ -1,10 +1,16 @@
 package com.dino.nanoplayground.ground.ui.components
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Build
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.Icon
+import androidx.compose.material3.SuggestionChip
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
@@ -19,6 +25,7 @@ fun ResponseContent(
     modelVersion: String,
     onNavigate: (Any) -> Unit,
     response: SnapshotStateList<String>,
+    activeToolCall: String? = null,
 ) {
     Column(
         modifier = modifier
@@ -33,6 +40,14 @@ fun ResponseContent(
             modelVersion = modelVersion,
             onClick = { onNavigate(Info) }
         )
+
+        AnimatedVisibility(visible = activeToolCall != null) {
+            SuggestionChip(
+                onClick = {},
+                label = { Text(activeToolCall ?: "") },
+                icon = { Icon(Icons.Default.Build, contentDescription = null) },
+            )
+        }
 
         ResponseDisplayBox(
             isInferencing = isInferencing,

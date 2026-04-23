@@ -10,7 +10,7 @@ import com.dino.nanoplayground.server.models.ErrorDetail
 import com.dino.nanoplayground.server.models.ErrorResponse
 import com.dino.nanoplayground.server.models.StreamChoice
 import com.dino.nanoplayground.server.models.Usage
-import com.google.mlkit.genai.prompt.GenerativeModel
+import com.dino.nanoplayground.tools.ToolOrchestrator
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.call
@@ -30,9 +30,11 @@ import java.util.UUID
  *
  * The prompt sent to Gemini Nano is assembled by concatenating all message turns
  * with role prefixes, mirroring typical instruction-following conventions.
+ * Tool calls emitted by the model are transparently executed before the final
+ * response is returned.
  */
 fun Route.chatRoutes(
-    generativeModel: GenerativeModel,
+    toolOrchestrator: ToolOrchestrator,
     bearerToken: () -> String,
 ) {
     post("/v1/chat/completions") {
@@ -67,8 +69,7 @@ fun Route.chatRoutes(
             // SSE streaming response
             call.respondTextWriter(contentType = ContentType.Text.EventStream) {
                 try {
-                    val result = generativeModel.generateContent(prompt)
-                    val text = result.candidates.joinToString("") { it.text }
+                    val text = toolOrchestrator.runWithTools(prompt)
 
                     // First delta: role
                     val roleChunk = ChatCompletionChunk(
@@ -121,8 +122,7 @@ fun Route.chatRoutes(
         } else {
             // Non-streaming path
             try {
-                val result = generativeModel.generateContent(prompt)
-                val text = result.candidates.joinToString("") { it.text }
+                val text = toolOrchestrator.runWithTools(prompt)
 
                 call.respond(
                     ChatCompletionResponse(
