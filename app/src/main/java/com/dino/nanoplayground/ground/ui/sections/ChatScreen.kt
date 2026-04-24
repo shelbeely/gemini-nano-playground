@@ -54,6 +54,7 @@ fun ChatScreen(viewModel: ChatViewModel, intentPrompt: String, onNavigate: (Any)
     }
 
     val countDown by viewModel.countDown.collectAsStateWithLifecycle()
+    val activeToolCall by viewModel.activeToolCall.collectAsStateWithLifecycle()
 
     SharedTransitionLayout {
 
@@ -73,7 +74,8 @@ fun ChatScreen(viewModel: ChatViewModel, intentPrompt: String, onNavigate: (Any)
                 isInferencing = state.isInferencing,
                 modelVersion = state.nanoVersion.orEmpty(),
                 onNavigate = onNavigate,
-                response = viewModel.response
+                response = viewModel.response,
+                activeToolCall = activeToolCall,
             )
 
 
